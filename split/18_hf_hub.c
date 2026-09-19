@@ -1,0 +1,6 @@
+/* -------- Hugging Face Hub integration -------- */
+static char* http_text(const char*url,size_t*len);
+static int hf_repo_ok(const char*s){if(!s||!*s)return 0;for(const unsigned char*p=(const unsigned char*)s;*p;p++)if(!(isalnum(*p)||*p=='/'||*p=='.'||*p=='-'||*p=='_'))return 0;return strchr(s,'/')!=NULL;}
+static Value ai_hf_info(VM*vm,int n,Value*a){if(!cap_allowed(vm,CAP_WEB))return cap_error(vm,CAP_WEB,"ai.hf_info");if(n!=1||a[0].t!=VSTR||!hf_repo_ok(a[0].u.s))return vn();char url[1024];snprintf(url,sizeof url,"https://huggingface.co/api/models/%s",a[0].u.s);size_t len=0;char*txt=http_text(url,&len);if(!txt)return vn();Value o=vsobj();stput(o.u.st,"repo",a[0]);stput(o.u.st,"json",vs(txt));xfree(txt);stput(o.u.st,"hub",vs("huggingface.co"));return o;}
+static Value ai_hf_download(VM*vm,int n,Value*a){if(!cap_allowed(vm,CAP_WEB)||!cap_allowed(vm,CAP_FS))return cap_error(vm,CAP_WEB|CAP_FS,"ai.hf_download");if(n!=3||a[0].t!=VSTR||a[1].t!=VSTR||a[2].t!=VSTR||!hf_repo_ok(a[0].u.s)||!safe_path_arg(a[1].u.s))return vb(0);char url[2048];snprintf(url,sizeof url,"https://huggingface.co/%s/resolve/main/%s?download=true",a[0].u.s,a[2].u.s);return web_download(vm,2,(Value[]){vs(url),a[1]});}
+
