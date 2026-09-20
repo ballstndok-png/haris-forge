@@ -1,16 +1,16 @@
 CC       ?= cc
 CSTD     ?= -std=c11
-CFLAGS   ?= -O2 -Wall -Wextra -Wno-unused-parameter -Wno-unused-function
+CFLAGS   ?= -O2 -std=gnu11 -w -Wno-everything
 LDFLAGS  ?= -lm -lpthread
 
-UNAME_S  := $(shell uname -s)
+UNAME_S  := $(shell uname -s 2>/dev/null)
+
 ifeq ($(UNAME_S),Darwin)
     CFLAGS += -D_DARWIN_C_SOURCE
-    CFLAGS += -Wno-int-conversion -Wno-incompatible-pointer-types
 endif
 
 ifeq ($(OS),Windows_NT)
-    CFLAGS += -Wno-int-conversion -Wno-incompatible-pointer-types
+    CFLAGS += -D_WIN32_WINNT=0x0600
 endif
 
 PKGS       = openssl libcurl sqlite3
@@ -28,19 +28,19 @@ else
 SRC = $(CORE_SRC) $(COMPAT_SRC) $(STUB_SRC)
 endif
 
-.PHONY: all debug clean test install
+.PHONY: all clean test install
 
 all: $(BIN)
 
 $(BIN): $(SRC)
-	$(CC) $(CSTD) $(CFLAGS) $(PKG_CFLAGS) -o $@ $(SRC) $(LDFLAGS) $(PKG_LIBS)
+$(CC) $(CSTD) $(CFLAGS) $(PKG_CFLAGS) -o $@ $(SRC) $(LDFLAGS) $(PKG_LIBS)
 
 clean:
-	rm -f $(BIN) *.o
+rm -f $(BIN) *.o
 
 test: $(BIN)
-	./$(BIN) --version
+./$(BIN) --version
 
 install: $(BIN)
-	install -d $(DESTDIR)/usr/local/bin
-	install -m 0755 $(BIN) $(DESTDIR)/usr/local/bin/$(BIN)
+install -d $(DESTDIR)/usr/local/bin
+install -m 0755 $(BIN) $(DESTDIR)/usr/local/bin/$(BIN)
