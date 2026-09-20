@@ -3,46 +3,66 @@ name: Build
 on:
   push:
     branches: [main]
-    tags: ['v*']
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            name: linux-x86_64
-            binary: haris
-          - os: macos-latest
-            name: macos-arm64
-            binary: haris
-          - os: windows-latest
-            name: windows-x86_64
-            binary: haris.exe
-
+  linux:
+    name: Linux x86_64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Linux
-        if: runner.os == 'Linux'
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libsqlite3-dev pkg-config
 
-      - name: Setup macOS
-        if: runner.os == 'macOS'
+      - name: Build
+        run: make
+
+      - name: Verify
+        run: ./haris --version
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: haris-linux-x86_64
+          path: haris
+
+  macos:
+    name: macOS ARM64
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
         run: |
           brew install openssl curl sqlite pkg-config
-          echo "PKG_CONFIG_PATH=/opt/homebrew/opt/openssl@3/lib/pkgconfig:/opt/homebrew/opt/curl/lib/pkgconfig:/opt/homebrew/opt/sqlite/lib/pkgconfig" >> $GITHUB_ENV
 
-      - name: Setup Windows
-        if: runner.os == 'Windows'
+      - name: Build
+        env:
+          PKG_CONFIG_PATH: /opt/homebrew/opt/openssl@3/lib/pkgconfig:/opt/homebrew/opt/curl/lib/pkgconfig:/opt/homebrew/opt/sqlite/lib/pkgconfig
+        run: make
+
+      - name: Verify
+        run: ./haris --version
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: haris-macos-arm64
+          path: haris
+
+  windows:
+    name: Windows x86_64
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -52,23 +72,16 @@ jobs:
             mingw-w64-x86_64-openssl
             mingw-w64-x86_64-curl
             mingw-w64-x86_64-sqlite3
-            mingw-w64-x86_64-pkg-config
-            make
 
-      - name: Build (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: make
-
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
+      - name: Build
         run: |
-          gcc -O2 -std=c11 main.c android_stub.c -o haris.exe \
-            -lssl -lcrypto -lcurl -lsqlite3 -lws2_32 -lm -lpthread
+          gcc -O2 -std=c11 main.c android_stub.c -o haris.exe -lssl -lcrypto -lcurl -lsqlite3 -lws2_32 -lm
+
+      - name: Verify
+        run: ./haris.exe --version
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: haris-${{ matrix.name }}
-          path: ${{ matrix.binary }}
-          if-no-files-found: error
+          name: haris-windows-x86_64
+          path: haris.exe
