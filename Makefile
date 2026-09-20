@@ -1,10 +1,14 @@
 CC       ?= cc
-CSTD     ?= -std=c11
-CFLAGS   ?= -O2 -std=gnu11 -w -Wno-everything
+CSTD     ?= -std=gnu11
+CFLAGS   ?= -O2 -w
+CFLAGS   += -Wno-implicit-function-declaration
+CFLAGS   += -Wno-int-conversion
+CFLAGS   += -Wno-incompatible-pointer-types
+CFLAGS   += -Wno-deprecated-declarations
+CFLAGS   += -Wno-builtin-declaration-mismatch
 LDFLAGS  ?= -lm -lpthread
 
 UNAME_S  := $(shell uname -s 2>/dev/null)
-
 ifeq ($(UNAME_S),Darwin)
     CFLAGS += -D_DARWIN_C_SOURCE
 endif

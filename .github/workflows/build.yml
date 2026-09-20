@@ -7,30 +7,25 @@ on:
 
 jobs:
   linux:
-    name: Linux x86_64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libsqlite3-dev pkg-config
+      - name: Install deps
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev libcurl4-openssl-dev libsqlite3-dev pkg-config
       - name: Build
         run: make
       - name: Verify
         run: ./haris --version
-      - name: Upload
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: haris-linux-x86_64
           path: haris
 
   macos:
-    name: macOS ARM64
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
+      - name: Install deps
         run: brew install openssl curl sqlite pkg-config
       - name: Build
         env:
@@ -38,22 +33,19 @@ jobs:
         run: make
       - name: Verify
         run: ./haris --version
-      - name: Upload
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: haris-macos-arm64
           path: haris
 
   windows:
-    name: Windows x86_64
     runs-on: windows-latest
     defaults:
       run:
         shell: msys2 {0}
     steps:
       - uses: actions/checkout@v4
-      - name: Setup MSYS2
-        uses: msys2/setup-msys2@v2
+      - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
           update: true
@@ -62,16 +54,12 @@ jobs:
             mingw-w64-x86_64-openssl
             mingw-w64-x86_64-curl
             mingw-w64-x86_64-sqlite3
+            mingw-w64-x86_64-pkg-config
       - name: Build
-        run: |
-          gcc -O2 -std=c11 \
-              -Wno-int-conversion \
-              -Wno-incompatible-pointer-types \
-              main.c openssl_compat.c \
-              -o haris.exe \
-              -lssl -lcrypto -lcurl -lsqlite3 -lws2_32 -lm
-      - name: Upload
-        uses: actions/upload-artifact@v4
+        run: make
+      - name: Verify
+        run: ./haris.exe --version
+      - uses: actions/upload-artifact@v4
         with:
           name: haris-windows-x86_64
           path: haris.exe
