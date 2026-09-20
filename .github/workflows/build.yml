@@ -35,8 +35,7 @@ jobs:
       - name: Build
         env:
           PKG_CONFIG_PATH: /opt/homebrew/opt/openssl@3/lib/pkgconfig:/opt/homebrew/opt/curl/lib/pkgconfig:/opt/homebrew/opt/sqlite/lib/pkgconfig
-        run: |
-          make 2>&1 | tail -50
+        run: make
       - name: Verify
         run: ./haris --version
       - name: Upload
@@ -70,8 +69,7 @@ jobs:
               -Wno-incompatible-pointer-types \
               main.c openssl_compat.c \
               -o haris.exe \
-              -lssl -lcrypto -lcurl -lsqlite3 -lws2_32 -lm \
-              2>&1 | tail -50
+              -lssl -lcrypto -lcurl -lsqlite3 -lws2_32 -lm
       - name: Upload
         uses: actions/upload-artifact@v4
         with:

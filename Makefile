@@ -6,6 +6,7 @@ LDFLAGS  ?= -lm -lpthread
 UNAME_S  := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
     CFLAGS += -D_DARWIN_C_SOURCE
+    CFLAGS += -Wno-int-conversion -Wno-incompatible-pointer-types
 endif
 
 ifeq ($(OS),Windows_NT)
