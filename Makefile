@@ -14,13 +14,14 @@ PKG_CFLAGS := $(shell pkg-config --cflags $(PKGS) 2>/dev/null)
 PKG_LIBS   := $(shell pkg-config --libs   $(PKGS) 2>/dev/null)
 
 CORE_SRC   = main.c
+COMPAT_SRC = openssl_compat.c
 STUB_SRC   = android_stub.c
 BIN        = haris
 
 ifeq ($(wildcard /data/data/com.termux/files/usr),)
-SRC = $(CORE_SRC)
+SRC = $(CORE_SRC) $(COMPAT_SRC)
 else
-SRC = $(CORE_SRC) $(STUB_SRC)
+SRC = $(CORE_SRC) $(COMPAT_SRC) $(STUB_SRC)
 endif
 
 .PHONY: all debug clean test install
