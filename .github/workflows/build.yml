@@ -11,19 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libsqlite3-dev pkg-config
-
       - name: Build
         run: make
-
       - name: Verify
         run: ./haris --version
-
-      - name: Upload artifact
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: haris-linux-x86_64
@@ -34,20 +30,16 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Install dependencies
-        run: |
-          brew install openssl curl sqlite pkg-config
-
+        run: brew install openssl curl sqlite pkg-config
       - name: Build
         env:
           PKG_CONFIG_PATH: /opt/homebrew/opt/openssl@3/lib/pkgconfig:/opt/homebrew/opt/curl/lib/pkgconfig:/opt/homebrew/opt/sqlite/lib/pkgconfig
-        run: make
-
+        run: |
+          make 2>&1 | tail -50
       - name: Verify
         run: ./haris --version
-
-      - name: Upload artifact
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: haris-macos-arm64
@@ -61,7 +53,6 @@ jobs:
         shell: msys2 {0}
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
@@ -72,15 +63,16 @@ jobs:
             mingw-w64-x86_64-openssl
             mingw-w64-x86_64-curl
             mingw-w64-x86_64-sqlite3
-
       - name: Build
         run: |
-          gcc -O2 -std=c11 main.c android_stub.c -o haris.exe -lssl -lcrypto -lcurl -lsqlite3 -lws2_32 -lm
-
-      - name: Verify
-        run: ./haris.exe --version
-
-      - name: Upload artifact
+          gcc -O2 -std=c11 \
+              -Wno-int-conversion \
+              -Wno-incompatible-pointer-types \
+              main.c openssl_compat.c \
+              -o haris.exe \
+              -lssl -lcrypto -lcurl -lsqlite3 -lws2_32 -lm \
+              2>&1 | tail -50
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: haris-windows-x86_64

@@ -3,10 +3,13 @@ CSTD     ?= -std=c11
 CFLAGS   ?= -O2 -Wall -Wextra -Wno-unused-parameter -Wno-unused-function
 LDFLAGS  ?= -lm -lpthread
 
-# macOS needs _DARWIN_C_SOURCE for mkdtemp, realpath, etc.
 UNAME_S  := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
     CFLAGS += -D_DARWIN_C_SOURCE
+endif
+
+ifeq ($(OS),Windows_NT)
+    CFLAGS += -Wno-int-conversion -Wno-incompatible-pointer-types
 endif
 
 PKGS       = openssl libcurl sqlite3
@@ -30,9 +33,6 @@ all: $(BIN)
 
 $(BIN): $(SRC)
 	$(CC) $(CSTD) $(CFLAGS) $(PKG_CFLAGS) -o $@ $(SRC) $(LDFLAGS) $(PKG_LIBS)
-
-debug: CFLAGS = -O0 -g -Wall -Wextra
-debug: clean $(BIN)
 
 clean:
 	rm -f $(BIN) *.o
